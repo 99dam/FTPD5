@@ -24,8 +24,8 @@ export async function readSpreadsheet(file: File): Promise<SheetRows> {
 /** UTF-8 first; falls back to Windows-874 (Thai Excel "CSV" export). */
 function decodeText(buffer: ArrayBuffer): string {
   const utf8 = new TextDecoder('utf-8').decode(buffer);
-  const text = utf8.includes('�') ? new TextDecoder('windows-874').decode(buffer) : utf8;
-  return text.replace(/^﻿/, '');
+  const text = utf8.includes('\uFFFD') ? new TextDecoder('windows-874').decode(buffer) : utf8;
+  return text.replace(/^\uFEFF/, '');
 }
 
 export function parseCsv(text: string): SheetRows {

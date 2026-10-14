@@ -147,5 +147,5 @@ export function buildTemplateCsv(): Blob {
     'ชื่อผู้ถูกกล่าวหา,ศาล,เลขคดีดำ,เลขคดีแดง,หมายเหตุ',
     'นายตัวอย่าง ทดสอบ,ศาลแขวงตัวอย่าง,อ.123/2569,,',
   ];
-  return new Blob(['﻿' + lines.join('\r\n') + '\r\n'], { type: 'text/csv;charset=utf-8' });
+  return new Blob(['\uFEFF' + lines.join('\r\n') + '\r\n'], { type: 'text/csv;charset=utf-8' });
 }
