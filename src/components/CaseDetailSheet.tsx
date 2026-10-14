@@ -44,6 +44,8 @@ function CaseDetailBody({ row, onClose }: { row: CaseRow; onClose: () => void })
   const [confirmDelete, setConfirmDelete] = useState(false);
   const deleted = Boolean(row.deleted_at);
   const readOnly = deleted;
+  // Both numbers recorded: only admins may correct them (enforced in the database too).
+  const numbersLocked = row.is_complete && !isAdmin;
 
   const { register, handleSubmit, control, formState } = useForm<CaseFormValues>({
     resolver: zodResolver(caseFormSchema),
@@ -162,18 +164,24 @@ function CaseDetailBody({ row, onClose }: { row: CaseRow; onClose: () => void })
           <CaseNumberInput
             kind="black"
             id="cd-black"
-            disabled={readOnly || busy}
+            disabled={readOnly || numbersLocked || busy}
             error={errors.black_case_number?.message}
             {...register('black_case_number')}
           />
           <CaseNumberInput
             kind="red"
             id="cd-red"
-            disabled={readOnly || busy}
+            disabled={readOnly || numbersLocked || busy}
             error={errors.red_case_number?.message}
             {...register('red_case_number')}
           />
         </div>
+        {numbersLocked && !readOnly && (
+          <p className="-mt-2 flex items-center gap-1.5 text-sm font-semibold text-ok-600">
+            <Lock className="size-4 shrink-0" aria-hidden />
+            กรอกครบแล้ว เลขคดีถูกล็อก แก้ได้เฉพาะผู้ดูแลระบบ
+          </p>
+        )}
 
         <div>
           <label htmlFor="cd-note" className="field-label">

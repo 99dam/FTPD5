@@ -8,7 +8,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(42);
+select plan(45);
 
 -- ---------------------------------------------------------------------
 -- Fixtures (as postgres / superuser)
@@ -75,6 +75,10 @@ select lives_ok($$update public.cases set red_case_number = 'อ.99/2569' where 
   'officer can record a red case number');
 select ok((select is_complete from public.cases where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
   'is_complete is derived from both case numbers');
+select throws_ok($$update public.cases set red_case_number = 'อ.98/2569' where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'$$,
+  '42501', 'CASE_LOCKED', 'officer cannot change numbers of a completed case');
+select lives_ok($$update public.cases set note = 'บันทึกเพิ่ม' where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'$$,
+  'officer can still edit the note of a completed case');
 
 select lives_ok($$update public.cases set is_skipped = true where id = 'dddddddd-dddd-dddd-dddd-dddddddddddd'$$,
   'officer can skip a case');
@@ -134,6 +138,8 @@ select throws_ok($$insert into public.cases (accused_name, court_id, black_case_
   '23505', null, 'duplicate black case number in same court is rejected');
 select lives_ok($$insert into public.cases (accused_name, court_id, black_case_number) values ('ต่างศาล', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'อ.1/2569')$$,
   'same case number in a different court is allowed');
+select lives_ok($$update public.cases set red_case_number = 'อ.100/2569' where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'$$,
+  'admin can correct numbers of a completed case');
 
 -- Officer cannot see the deleted row; admin restores it.
 select set_config('request.jwt.claims', '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', true);

@@ -1,8 +1,9 @@
 import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { Check, Info, Landmark, LoaderCircle, Save, SkipForward, Undo2 } from 'lucide-react';
+import { Check, Info, Landmark, LoaderCircle, Lock, Save, SkipForward, Undo2 } from 'lucide-react';
 import type { CaseRow } from '@/types';
 import { caseNumberSchema } from '@/lib/validation';
 import { getDraft, setDraft } from '@/lib/drafts';
+import { useAuth } from '@/hooks/useAuth';
 import { cn, formatSequence } from '@/lib/utils';
 import { CaseNumberInput } from './CaseNumberInput';
 import { StatusBadge } from './StatusBadge';
@@ -30,7 +31,10 @@ const normalise = (v: string | null | undefined) => (v ?? '').trim().replace(/\s
  * draft until the server confirms the save.
  */
 export function CaseCard({ row, saving, justSaved, onSave, onSkip, onUnskip, onOpenDetail }: CaseCardProps) {
-  const draft = getDraft(row.id);
+  const { isAdmin } = useAuth();
+  // Both numbers recorded: locked for officers (the database enforces this too).
+  const locked = row.is_complete && !isAdmin;
+  const draft = locked ? undefined : getDraft(row.id);
   const [black, setBlack] = useState(draft?.black ?? row.black_case_number ?? '');
   const [red, setRed] = useState(draft?.red ?? row.red_case_number ?? '');
   const [touched, setTouched] = useState(false);
@@ -51,7 +55,7 @@ export function CaseCard({ row, saving, justSaved, onSave, onSkip, onUnskip, onO
   const submit = (e?: FormEvent) => {
     e?.preventDefault();
     setTouched(true);
-    if (saving || !dirty || fieldError(black) || fieldError(red)) return;
+    if (locked || saving || !dirty || fieldError(black) || fieldError(red)) return;
     onSave(row, black, red);
   };
 
@@ -107,7 +111,7 @@ export function CaseCard({ row, saving, justSaved, onSave, onSkip, onUnskip, onO
             onKeyDown={onBlackKeyDown}
             enterKeyHint="next"
             error={blackError}
-            disabled={saving}
+            disabled={saving || locked}
           />
           <CaseNumberInput
             ref={redRef}
@@ -117,10 +121,16 @@ export function CaseCard({ row, saving, justSaved, onSave, onSkip, onUnskip, onO
             onChange={(e) => update(black, e.target.value)}
             enterKeyHint="done"
             error={redError}
-            disabled={saving}
+            disabled={saving || locked}
           />
         </div>
 
+        {locked ? (
+          <p className="mt-4 flex items-center gap-2 rounded-2xl bg-ok-50 px-4 py-3 text-sm font-semibold text-ok-600">
+            <Lock className="size-4 shrink-0" aria-hidden />
+            กรอกครบแล้ว ล็อกการแก้ไข (แก้ได้เฉพาะผู้ดูแลระบบ)
+          </p>
+        ) : (
         <div className="mt-4 flex gap-2">
           {row.is_skipped && !row.is_complete ? (
             <button type="button" className="btn-muted flex-1" onClick={() => onUnskip(row)} disabled={saving}>
@@ -143,6 +153,7 @@ export function CaseCard({ row, saving, justSaved, onSave, onSkip, onUnskip, onO
             {saving ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
+        )}
       </form>
 
       {justSaved && (
