@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>FTPD5</title>
+    <script>
+      // GitHub Pages SPA fallback (based on rafgraph/spa-github-pages, MIT).
+      // Converts /FTPD5/some/route?x=1#y into /FTPD5/?/some/route&x=1#y so that
+      // index.html can restore the route for React Router after a refresh.
+      // Keep 1 path segment for a project site (https://USERNAME.github.io/FTPD5/).
+      var pathSegmentsToKeep = 1;
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+          l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+          l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>

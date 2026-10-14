@@ -1,0 +1,49 @@
+# Supabase CLI configuration for LOCAL development / testing.
+# Hosted project settings must be configured in the Supabase Dashboard too
+# (see README > "ตั้งค่า Supabase Auth").
+project_id = "ftpd5"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 100
+
+[db]
+port = 54322
+major_version = 17
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173/FTPD5/"
+additional_redirect_urls = ["http://localhost:5173/FTPD5/"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+# No public sign-up. Accounts are created by admins via the invite-user function.
+enable_signup = false
+enable_anonymous_sign_ins = false
+minimum_password_length = 12
+password_requirements = "lower_upper_letters_digits_symbols"
+
+[auth.rate_limit]
+sign_in_sign_ups = 30
+token_refresh = 150
+email_sent = 4
+
+[auth.email]
+enable_signup = false
+double_confirm_changes = true
+enable_confirmations = true
+secure_password_change = true
+
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[functions.invite-user]
+verify_jwt = true

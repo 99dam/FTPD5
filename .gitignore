@@ -1,0 +1,27 @@
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.*
+!.env.example
+*.log
+npm-debug.log*
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+coverage
+
+# Supabase local
+supabase/.branches
+supabase/.temp
+supabase/functions/.env
+supabase/.env
+
+# Never commit real case data or backups
+*.dump
+*.backup
+backups/
+*.csv
+*.xlsx
