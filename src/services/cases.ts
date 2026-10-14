@@ -114,6 +114,48 @@ export async function createCase(input: CaseInput) {
   return data as { id: string; sequence_number: number };
 }
 
+export interface ImportResult {
+  inserted: number;
+  failed: Array<{ index: number; error: unknown }>;
+}
+
+const IMPORT_BATCH_SIZE = 50;
+
+/**
+ * Inserts many cases. Each batch is one request; if a batch is rejected
+ * (e.g. one duplicate case number) its rows are retried one by one so the
+ * valid rows still go in and each failure is attributed to its row.
+ */
+export async function importCases(
+  inputs: Array<Omit<CaseInput, 'note'> & { note?: string }>,
+  onProgress?: (done: number) => void,
+): Promise<ImportResult> {
+  const toRow = (input: (typeof inputs)[number]) => ({
+    accused_name: input.accused_name.trim(),
+    court_id: input.court_id,
+    black_case_number: emptyToNull(input.black_case_number),
+    red_case_number: emptyToNull(input.red_case_number),
+    note: emptyToNull(input.note),
+  });
+
+  const result: ImportResult = { inserted: 0, failed: [] };
+  for (let start = 0; start < inputs.length; start += IMPORT_BATCH_SIZE) {
+    const batch = inputs.slice(start, start + IMPORT_BATCH_SIZE);
+    const { error } = await supabase.from('cases').insert(batch.map(toRow));
+    if (!error) {
+      result.inserted += batch.length;
+    } else {
+      for (let i = 0; i < batch.length; i++) {
+        const { error: rowError } = await supabase.from('cases').insert(toRow(batch[i]));
+        if (rowError) result.failed.push({ index: start + i, error: rowError });
+        else result.inserted += 1;
+      }
+    }
+    onProgress?.(Math.min(start + IMPORT_BATCH_SIZE, inputs.length));
+  }
+  return result;
+}
+
 /** Sends only changed fields. Officers may change numbers and note only (enforced in DB). */
 export async function updateCase(id: string, changes: Partial<CaseInput>) {
   const payload: Record<string, string | null> = {};

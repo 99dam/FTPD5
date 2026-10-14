@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FolderSearch, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { FileSpreadsheet, FolderSearch, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { AppHeader, PageContainer } from '@/components/AppHeader';
 import { SearchInput } from '@/components/SearchInput';
 import { CourtSelector } from '@/components/CourtSelector';
@@ -7,6 +7,7 @@ import { StatusFilter } from '@/components/StatusFilter';
 import { CaseListItem } from '@/components/CaseListItem';
 import { CaseDetailSheet } from '@/components/CaseDetailSheet';
 import { CaseFormSheet } from '@/components/CaseFormSheet';
+import { ImportCasesSheet } from '@/components/ImportCasesSheet';
 import { EmptyState } from '@/components/EmptyState';
 import { ListSkeleton } from '@/components/LoadingSkeleton';
 import { Pagination } from '@/components/Pagination';
@@ -25,6 +26,7 @@ export default function CasesPage() {
   const query = useDebounce(search.trim(), 350);
   const [selected, setSelected] = useState<CaseRow | null>(null);
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const inTrash = isAdmin && trash;
   const params = useMemo<CaseSearchParams>(
@@ -50,11 +52,18 @@ export default function CasesPage() {
         subtitle={list.isPending ? 'กำลังโหลด...' : `ทั้งหมด ${formatNumber(total)} รายการ`}
         actions={
           !inTrash && (
-            <button type="button" className="btn-primary" onClick={() => setCreating(true)}>
-              <Plus className="size-5" />
-              <span className="hidden sm:inline">เพิ่มสำนวน</span>
-              <span className="sm:hidden">เพิ่ม</span>
-            </button>
+            <>
+              <button type="button" className="btn-secondary" onClick={() => setImporting(true)}>
+                <FileSpreadsheet className="size-5" />
+                <span className="hidden sm:inline">นำเข้า Excel</span>
+                <span className="sm:hidden">นำเข้า</span>
+              </button>
+              <button type="button" className="btn-primary" onClick={() => setCreating(true)}>
+                <Plus className="size-5" />
+                <span className="hidden sm:inline">เพิ่มสำนวน</span>
+                <span className="sm:hidden">เพิ่ม</span>
+              </button>
+            </>
           )
         }
       >
@@ -121,6 +130,7 @@ export default function CasesPage() {
 
       <CaseDetailSheet row={selected} onClose={() => setSelected(null)} />
       <CaseFormSheet open={creating} onClose={() => setCreating(false)} defaultCourtId={courtId} />
+      <ImportCasesSheet open={importing} onClose={() => setImporting(false)} defaultCourtId={courtId} />
     </>
   );
 }
